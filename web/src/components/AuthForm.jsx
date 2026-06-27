@@ -1,4 +1,4 @@
-import { useId, useState } from 'react';
+import { useEffect, useId, useRef, useState } from 'react';
 import { login, register } from '../lib/api.js';
 
 // Email/password sign-in and registration. Real labels, a single live-region for
@@ -12,7 +12,13 @@ export default function AuthForm({ onAuthed }) {
 
   const emailId = useId();
   const pwId = useId();
+  const errorRef = useRef(null);
   const isRegister = mode === 'register';
+
+  // Move focus to the error so screen-reader and keyboard users are taken to it.
+  useEffect(() => {
+    if (error) errorRef.current?.focus?.();
+  }, [error]);
 
   async function handleSubmit(event) {
     event.preventDefault();
@@ -69,7 +75,7 @@ export default function AuthForm({ onAuthed }) {
         </button>
 
         {error && (
-          <p className="alert" role="alert">
+          <p className="alert" role="alert" tabIndex={-1} ref={errorRef}>
             <span aria-hidden="true">⚠ </span>
             {error}
           </p>

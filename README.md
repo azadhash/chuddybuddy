@@ -23,6 +23,16 @@ the conversation so it can show your patterns over time.
   record (Ergene 2003), physiological sigh (Balban/Huberman 2023), self-compassion break
   (Neff), if-then plan (Gollwitzer), pre-exam worry dump (Ramirez & Beilock). The exercise
   content is fixed, reviewed text — never generated per request.
+- **Guided, animated exercises.** "Start guided exercise" turns the card into an
+  interactive run-through: breathing protocols (the physiological sigh) play an animated
+  breathing orb with a live countdown and cycle counter; reflective exercises walk you
+  through one step at a time with progress dots. The breathing timings are reviewed content,
+  not model output.
+- **Insights dashboard.** A second tab summarises your real history — check-ins, days active,
+  current streak, average intensity — plus a *mood-over-time* chart (average intensity per
+  day) and your most common thinking patterns.
+- **Journal.** Your own entries grouped by day, each annotated with how Anchor read it
+  (emotion, intensity, triggers) so you can look back on how each day actually felt.
 - **Pattern timeline.** Recurring triggers and the intensity trend across your real
   conversation, with a callout when a genuine pattern repeats.
 - **Crisis safety net.** A conservative scan runs *before* the model on every message. If
@@ -36,15 +46,18 @@ the conversation so it can show your patterns over time.
 ```
 React/Vite SPA  ──cookie-authed fetch──▶  Express (one service)
   AuthForm (login/register)                 /api/auth/register|login|logout|me
-  Chat thread + inline exercise/crisis      /api/chat            (auth required)
-  Timeline (from real history)              /api/chat/history    (auth required)
-                                            /api/helplines, /api/health
+  Talk tab:  chat + guided exercises        /api/chat            (auth required)
+  Insights tab:  dashboard + journal        /api/chat/history    (auth required)
+             + pattern timeline             /api/helplines, /api/health
                                             │
                                        PostgreSQL  (users, messages+insight jsonb)
                                             │
                                    ONE claude-haiku-4-5 call per turn
                                    (structured output: reply + analysis)
 ```
+
+The dashboard, journal, and timeline are all derived **client-side** (`web/src/lib/insights.js`,
+pure functions) from the history the app already loads — no extra endpoints or round-trips.
 
 - **One model call per turn**, structured output (no retry-on-parse loops); `claude-haiku-4-5`.
 - The server owns each user's history in Postgres, so the client just sends the new message.
@@ -69,6 +82,13 @@ Real `<label>`s on every field; one `<h1>` with real `<h2>` sections; the conver
 `role="log"` `aria-live="polite"` region; `role="status"` loading and `role="alert"`
 errors/crisis; visible `:focus-visible` outlines; meaning never by colour alone (text +
 glyph); decorative icons `aria-hidden`; `prefers-reduced-motion` respected; `lang="en"`.
+
+Polished for keyboard and screen-reader users: a **skip link** to the main landmark; **focus
+management** (focus returns to the composer after each send, and moves to errors when they
+appear); `aria-busy` while a turn is in flight; the guided exercise player is a labelled
+`role="group"` that takes focus on start and announces each phase/step via `aria-live`; the
+breathing animation is disabled under `prefers-reduced-motion`; tab navigation uses
+`aria-current`. Layout is responsive (the composer and controls stack on small screens).
 
 ## Setup
 
@@ -109,15 +129,17 @@ timeline updates. Reload — your conversation is still there.
 ## Test
 
 ```bash
-npm test         # runs both suites (62 tests)
+npm test         # runs both suites (83 tests)
 ```
 
 - **Server** (Vitest + supertest): password hashing, session tokens, the store, the chat
   pipeline, and the auth + chat routes — all with an injected **MemoryStore + mocked Anthropic
   client**, so tests need no key, network, or database.
-- **Web** (Vitest + Testing Library): auth-form labels/errors, the chat input, the gated app
-  (unauthed → auth, authed → chat, send → reply + exercise, crisis alert + helpline, logout),
-  the crisis panel, and the timeline pattern engine.
+- **Web** (Vitest + Testing Library): auth-form labels/errors, the chat input (incl. focus
+  return), the gated app (unauthed → auth, authed → chat, Insights tab, send → reply +
+  exercise, crisis alert + helpline, logout, skip link), the guided exercise player (step
+  walk-through + the animated breathing phases), the insights aggregation engine, the
+  dashboard, the journal, the crisis panel, and the timeline.
 
 ## Build & deploy (Render)
 

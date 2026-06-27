@@ -36,4 +36,13 @@ describe('ChatInput', () => {
     await user.type(screen.getByLabelText(/your message/i), 'quick note{Enter}');
     expect(onSend).toHaveBeenCalledWith('quick note');
   });
+
+  it('keeps focus in the field after sending so typing can continue', async () => {
+    const user = userEvent.setup();
+    render(<ChatInput onSend={() => {}} loading={false} />);
+    const field = screen.getByLabelText(/your message/i);
+    await user.type(field, 'hello');
+    await user.click(screen.getByRole('button', { name: /send/i }));
+    expect(field).toHaveFocus();
+  });
 });

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import AuthForm from './components/AuthForm.jsx';
 import ChatThread from './components/ChatThread.jsx';
 import ChatInput from './components/ChatInput.jsx';
@@ -21,6 +21,12 @@ export default function App() {
   const [sending, setSending] = useState(false);
   const [sendError, setSendError] = useState('');
   const [view, setView] = useState('chat');
+  const sendErrorRef = useRef(null);
+
+  // Take focus to a send error when it appears (WCAG: errors should receive focus).
+  useEffect(() => {
+    if (sendError) sendErrorRef.current?.focus?.();
+  }, [sendError]);
 
   async function loadHistory() {
     try {
@@ -96,6 +102,9 @@ export default function App() {
 
   return (
     <div className="app">
+      <a className="skip-link" href="#main">
+        Skip to main content
+      </a>
       <header className="app__header">
         <div className="app__brand">
           <h1 className="app__title">
@@ -116,7 +125,7 @@ export default function App() {
         </p>
       </header>
 
-      <main className="app__main">
+      <main className="app__main" id="main" tabIndex={-1}>
         {!authChecked ? (
           <p className="status" role="status">
             Loading…
@@ -145,14 +154,14 @@ export default function App() {
             </nav>
 
             {view === 'chat' ? (
-              <section className="card chat" aria-labelledby="chat-title">
+              <section className="card chat" aria-labelledby="chat-title" aria-busy={sending}>
                 <h2 id="chat-title" className="card__title">
                   Talk it through
                 </h2>
                 <ChatThread messages={messages} loading={sending} />
                 <ChatInput onSend={handleSend} loading={sending} />
                 {sendError && (
-                  <p className="alert" role="alert">
+                  <p className="alert" role="alert" tabIndex={-1} ref={sendErrorRef}>
                     <span aria-hidden="true">⚠ </span>
                     {sendError}
                   </p>

@@ -54,6 +54,14 @@ describe('App', () => {
     expect(await screen.findByLabelText(/email/i)).toBeInTheDocument();
   });
 
+  it('offers a skip link to the main content', async () => {
+    me.mockResolvedValue(null);
+    render(<App />);
+    await screen.findByLabelText(/email/i);
+    const skip = screen.getByRole('link', { name: /skip to main content/i });
+    expect(skip).toHaveAttribute('href', '#main');
+  });
+
   it('shows the chat by default when signed in', async () => {
     me.mockResolvedValue({ email: 'a@b.com' });
     render(<App />);
