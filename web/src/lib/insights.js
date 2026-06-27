@@ -69,30 +69,33 @@ export function entriesFrom(messages = []) {
       intensity: analysis?.intensity ?? 0,
       triggers: analysis?.triggers ?? [],
       distortion: analysis?.distortion ?? null,
+      crisis: analysis?.crisis ?? null,
     });
   }
   return entries;
 }
 
-// Entries grouped into calendar days, most-recent day first (for the journal log).
-export function journalDays(messages = []) {
+// Group a list of entries into calendar days, each with its average intensity and
+// dominant emotion. Shared by the journal, the dashboard, and the doctor summary.
+function groupByDay(entries) {
   const byDay = new Map();
-  for (const e of entriesFrom(messages)) {
+  for (const e of entries) {
     const key = dayKey(e.createdAt);
     if (!byDay.has(key)) {
       byDay.set(key, { key, label: dayLabel(e.createdAt), entries: [] });
     }
     byDay.get(key).entries.push(e);
   }
-
-  const days = [...byDay.values()].map((d) => {
+  return [...byDay.values()].map((d) => {
     const intensities = d.entries.map((e) => e.intensity);
     const avgIntensity = Math.round(intensities.reduce((a, b) => a + b, 0) / intensities.length);
     return { ...d, avgIntensity, dominantEmotion: mode(d.entries.map((e) => e.emotion)) };
   });
+}
 
-  days.sort((a, b) => b.key.localeCompare(a.key));
-  return days;
+// Entries grouped into calendar days, most-recent day first (for the journal log).
+export function journalDays(messages = []) {
+  return groupByDay(entriesFrom(messages)).sort((a, b) => b.key.localeCompare(a.key));
 }
 
 // Same days, oldest-first, for plotting the mood trend left-to-right.
@@ -147,7 +150,67 @@ export function topDistortions(messages = []) {
     if (!type || type === 'none') continue;
     counts.set(type, (counts.get(type) ?? 0) + 1);
   }
-  return [...counts.entries()]
-    .sort((a, b) => b[1] - a[1])
-    .map(([type, count]) => ({ type, count }));
+  return rankCounts(counts).map(([type, count]) => ({ type, count }));
+}
+
+function rankCounts(map) {
+  return [...map.entries()].sort((a, b) => b[1] - a[1]);
+}
+
+// Check-in entries whose calendar day falls within [fromKey, toKey] inclusive.
+// Keys are YYYY-MM-DD, so a lexicographic compare is a correct date compare.
+export function entriesInRange(messages = [], fromKey, toKey) {
+  return entriesFrom(messages).filter((e) => {
+    const k = dayKey(e.createdAt);
+    return k >= fromKey && k <= toKey;
+  });
+}
+
+// A shareable, deterministic summary of a date range — built entirely from the
+// user's own real history (no model call). Intended for the student to show a
+// doctor or counsellor: totals, emotion/trigger/pattern frequencies, a peak, any
+// crisis flags, and a day-by-day line.
+export function summarizeRange(messages = [], fromKey, toKey) {
+  const entries = entriesInRange(messages, fromKey, toKey);
+  const days = groupByDay(entries).sort((a, b) => a.key.localeCompare(b.key)); // chronological
+  const total = entries.length;
+  const avgIntensity = total ? Math.round(entries.reduce((a, e) => a + e.intensity, 0) / total) : 0;
+
+  let peak = null;
+  for (const e of entries) {
+    if (!peak || e.intensity > peak.intensity) peak = e;
+  }
+
+  const emotionCounts = new Map();
+  const triggerCounts = new Map();
+  const distortionCounts = new Map();
+  for (const e of entries) {
+    emotionCounts.set(e.emotion, (emotionCounts.get(e.emotion) ?? 0) + 1);
+    for (const cat of new Set((e.triggers ?? []).map((t) => t.category))) {
+      triggerCounts.set(cat, (triggerCounts.get(cat) ?? 0) + 1);
+    }
+    const type = e.distortion?.type;
+    if (type && type !== 'none') distortionCounts.set(type, (distortionCounts.get(type) ?? 0) + 1);
+  }
+
+  return {
+    fromKey,
+    toKey,
+    totalCheckins: total,
+    daysActive: days.length,
+    avgIntensity,
+    peakIntensity: peak ? peak.intensity : 0,
+    peakDayLabel: peak ? dayLabel(peak.createdAt) : null,
+    crisisCount: entries.filter((e) => e.crisis?.flag).length,
+    days: days.map((d) => ({
+      key: d.key,
+      label: d.label,
+      count: d.entries.length,
+      avgIntensity: d.avgIntensity,
+      dominantEmotion: d.dominantEmotion,
+    })),
+    emotions: rankCounts(emotionCounts).map(([emotion, count]) => ({ emotion, count })),
+    triggers: rankCounts(triggerCounts).map(([category, count]) => ({ category, count })),
+    distortions: rankCounts(distortionCounts).map(([type, count]) => ({ type, count })),
+  };
 }

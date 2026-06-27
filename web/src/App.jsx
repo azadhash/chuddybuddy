@@ -5,6 +5,7 @@ import ChatInput from './components/ChatInput.jsx';
 import Timeline from './components/Timeline.jsx';
 import Dashboard from './components/Dashboard.jsx';
 import Journal from './components/Journal.jsx';
+import DoctorReport from './components/DoctorReport.jsx';
 import { me, logout, getHistory, chat } from './lib/api.js';
 import { deriveEntries } from './lib/timeline.js';
 
@@ -99,7 +100,7 @@ export default function App() {
   // user's persisted entries (with timestamps) — but only when a new turn has been
   // sent since the last load, avoiding a redundant fetch on every tab switch.
   async function changeView(next) {
-    if (next === 'insights' && historyDirty.current) await loadHistory();
+    if (next !== 'chat' && historyDirty.current) await loadHistory();
     setView(next);
   }
 
@@ -161,9 +162,17 @@ export default function App() {
               >
                 Insights
               </button>
+              <button
+                type="button"
+                className="tab"
+                aria-current={view === 'share' ? 'page' : undefined}
+                onClick={() => changeView('share')}
+              >
+                Share
+              </button>
             </nav>
 
-            {view === 'chat' ? (
+            {view === 'chat' && (
               <section className="card chat" aria-labelledby="chat-title" aria-busy={sending}>
                 <h2 id="chat-title" className="card__title">
                   Talk it through
@@ -177,7 +186,9 @@ export default function App() {
                   </p>
                 )}
               </section>
-            ) : (
+            )}
+
+            {view === 'insights' && (
               <>
                 <section className="card" aria-labelledby="dashboard-title">
                   <h2 id="dashboard-title" className="card__title">
@@ -200,6 +211,15 @@ export default function App() {
                   <Journal messages={messages} />
                 </section>
               </>
+            )}
+
+            {view === 'share' && (
+              <section className="card" aria-labelledby="share-title">
+                <h2 id="share-title" className="card__title">
+                  Share with your doctor
+                </h2>
+                <DoctorReport messages={messages} email={user.email} />
+              </section>
             )}
           </>
         )}

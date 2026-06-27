@@ -33,6 +33,11 @@ the conversation so it can show your patterns over time.
   day) and your most common thinking patterns.
 - **Journal.** Your own entries grouped by day, each annotated with how Anchor read it
   (emotion, intensity, triggers) so you can look back on how each day actually felt.
+- **Share with your doctor.** A **Share** tab where you pick a range of days and get a private,
+  deterministic summary of that window — totals, average and peak intensity, most frequent
+  emotions, recurring triggers and thinking patterns, any crisis flags, and a day-by-day line —
+  which you can **copy, download (.txt), or print** to hand to a doctor or counsellor. Built only
+  from your own messages (no model call), with a clear "not a diagnosis" note.
 - **Pattern timeline.** Recurring triggers and the intensity trend across your real
   conversation, with a callout when a genuine pattern repeats.
 - **Crisis safety net — prompts to reach a real person.** A conservative keyword scan runs

@@ -81,6 +81,20 @@ describe('App', () => {
     expect(screen.getByText(/journal is empty/i)).toBeInTheDocument();
   });
 
+  it('opens the Share tab with the doctor summary', async () => {
+    const user = userEvent.setup();
+    me.mockResolvedValue({ email: 'a@b.com' });
+    render(<App />);
+
+    await screen.findByRole('heading', { name: /talk it through/i });
+    await user.click(screen.getByRole('button', { name: /share/i }));
+
+    expect(
+      await screen.findByRole('heading', { name: /share with your doctor/i }),
+    ).toBeInTheDocument();
+    expect(screen.getByLabelText('From')).toBeInTheDocument();
+  });
+
   it('sends a message and renders the reply + matched exercise', async () => {
     const user = userEvent.setup();
     me.mockResolvedValue({ email: 'a@b.com' });

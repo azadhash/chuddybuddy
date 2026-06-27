@@ -5,6 +5,8 @@ import {
   dailyMood,
   summary,
   topDistortions,
+  entriesInRange,
+  summarizeRange,
 } from '../src/lib/insights.js';
 
 // Two check-ins on two consecutive days, each followed by an assistant analysis.
@@ -109,5 +111,48 @@ describe('top patterns', () => {
       },
     ];
     expect(topDistortions(msgs)).toHaveLength(0);
+  });
+});
+
+describe('range summary (for the doctor report)', () => {
+  it('filters check-ins to the inclusive day range', () => {
+    expect(entriesInRange(sampleMessages(), '2026-06-26', '2026-06-26')).toHaveLength(1);
+    expect(entriesInRange(sampleMessages(), '2026-06-25', '2026-06-26')).toHaveLength(2);
+    expect(entriesInRange(sampleMessages(), '2026-07-01', '2026-07-31')).toHaveLength(0);
+  });
+
+  it('summarises totals, peak, emotions, and patterns for the range', () => {
+    const report = summarizeRange(sampleMessages(), '2026-06-25', '2026-06-26');
+    expect(report.totalCheckins).toBe(2);
+    expect(report.daysActive).toBe(2);
+    expect(report.avgIntensity).toBe(70);
+    expect(report.peakIntensity).toBe(80);
+    expect(report.emotions).toEqual([{ emotion: 'anxious', count: 2 }]);
+    expect(report.triggers).toHaveLength(2);
+    expect(report.distortions).toHaveLength(2);
+    expect(report.crisisCount).toBe(0);
+    expect(report.days).toHaveLength(2);
+  });
+
+  it('counts crisis-flagged check-ins in the range', () => {
+    const msgs = [
+      { id: 1, role: 'user', content: 'I want to give up', createdAt: '2026-06-26T10:00:00Z' },
+      {
+        id: 2,
+        role: 'assistant',
+        content: 'You deserve support',
+        createdAt: '2026-06-26T10:00:01Z',
+        emotion: 'despair',
+        intensity: 90,
+        crisis: { flag: true, severity: 'high' },
+      },
+    ];
+    expect(summarizeRange(msgs, '2026-06-26', '2026-06-26').crisisCount).toBe(1);
+  });
+
+  it('is empty for a range with no check-ins', () => {
+    const report = summarizeRange(sampleMessages(), '2020-01-01', '2020-01-02');
+    expect(report.totalCheckins).toBe(0);
+    expect(report.days).toEqual([]);
   });
 });
