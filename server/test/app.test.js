@@ -93,6 +93,8 @@ describe('chat', () => {
     const history = await agent.get('/api/chat/history');
     expect(history.body.messages.map((m) => m.role)).toEqual(['user', 'assistant']);
     expect(history.body.messages[1].intervention.id).toBe('thought_record');
+    // The dashboard groups entries by day, so every message carries a timestamp.
+    expect(history.body.messages[0].createdAt).toBeTruthy();
   });
 
   it('surfaces helplines on a crisis message', async () => {

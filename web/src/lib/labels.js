@@ -29,3 +29,9 @@ export function triggerLabel(category) {
 export function distortionLabel(type) {
   return DISTORTION_LABELS[type] ?? type;
 }
+
+// Emotions arrive as free-form lowercase words (e.g. "anxious"); title-case for display.
+export function emotionLabel(emotion) {
+  if (!emotion) return 'Neutral';
+  return emotion.charAt(0).toUpperCase() + emotion.slice(1);
+}
