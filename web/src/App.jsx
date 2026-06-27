@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import AuthForm from './components/AuthForm.jsx';
 import ChatThread from './components/ChatThread.jsx';
 import ChatInput from './components/ChatInput.jsx';
+import VoiceConversation from './components/VoiceConversation.jsx';
 import Timeline from './components/Timeline.jsx';
 import Dashboard from './components/Dashboard.jsx';
 import Journal from './components/Journal.jsx';
@@ -73,8 +74,11 @@ export default function App() {
           helplines: res.helplines,
         },
       ]);
+      // Return the reply so the voice loop can speak it; typed sends ignore it.
+      return res.reply;
     } catch (err) {
       setSendError(err.message);
+      throw err;
     } finally {
       setSending(false);
     }
@@ -150,6 +154,7 @@ export default function App() {
                   Talk it through
                 </h2>
                 <ChatThread messages={messages} loading={sending} />
+                <VoiceConversation onSend={handleSend} />
                 <ChatInput onSend={handleSend} loading={sending} />
                 {sendError && (
                   <p className="alert" role="alert">

@@ -29,6 +29,10 @@ the conversation so it can show your patterns over time.
   language suggests self-harm, Anchor shows India helplines (Tele-MANAS 14416, KIRAN,
   Vandrevala, AASRA, iCall) in an assertive alert and is transparent that it is an AI, not
   a therapist.
+- **Voice conversation.** Talk to Anchor hands-free: it listens, transcribes what you say,
+  sends it, and **speaks the reply back**, then listens again — a spoken back-and-forth.
+  Built entirely on the browser Web Speech API (no extra provider or key). Gracefully
+  degrades to the typed composer on browsers without speech recognition.
 - **Accounts.** Email/password sign-in; each person's chat and patterns persist in Postgres.
 
 ## Architecture
@@ -155,9 +159,9 @@ The repo includes a **`railway.json`** so Railway builds and runs the app the sa
 
 ## Roadmap (next feature)
 
-**Voice** via the browser Web Speech API — speech-to-text for talking to Anchor, text-to-speech
-for the guided exercises. The seam (`web/src/lib/voice.js`) is already in place; no extra
-provider or key needed.
+**Spoken guided exercises** — extend the voice loop so the breathing/step players read each
+step aloud and pace by voice, building on `web/src/lib/voice.js`. Recognition language is
+currently `en-US`; multi-language voice is a natural follow-on.
 
 ## Disclaimer
 
