@@ -1,0 +1,20 @@
+{
+  "name": "anchor",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Anchor — a GenAI mental-wellness companion that reads between the lines of a student's journal to surface hidden stress triggers, match an evidence-based coping exercise, and keep a crisis safety net.",
+  "workspaces": [
+    "server",
+    "web"
+  ],
+  "scripts": {
+    "dev": "node scripts/dev.mjs",
+    "build": "npm run build --workspace web",
+    "start": "npm start --workspace server",
+    "test": "npm test --workspace server && npm test --workspace web"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
