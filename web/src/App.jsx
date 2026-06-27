@@ -1,97 +1,147 @@
-import { useEffect, useRef, useState } from 'react';
-import JournalForm from './components/JournalForm.jsx';
-import Analysis from './components/Analysis.jsx';
-import CrisisPanel from './components/CrisisPanel.jsx';
+import { useEffect, useState } from 'react';
+import AuthForm from './components/AuthForm.jsx';
+import ChatThread from './components/ChatThread.jsx';
+import ChatInput from './components/ChatInput.jsx';
 import Timeline from './components/Timeline.jsx';
-import { analyzeEntry } from './lib/api.js';
-import { loadEntries, saveEntry } from './lib/storage.js';
+import { me, logout, getHistory, chat } from './lib/api.js';
+import { deriveEntries } from './lib/timeline.js';
+
+function uid() {
+  return typeof crypto !== 'undefined' && crypto.randomUUID
+    ? crypto.randomUUID()
+    : String(Date.now() + Math.random());
+}
 
 export default function App() {
-  const [analysis, setAnalysis] = useState(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
-  const [entries, setEntries] = useState(() => loadEntries());
+  const [authChecked, setAuthChecked] = useState(false);
+  const [user, setUser] = useState(null);
+  const [messages, setMessages] = useState([]);
+  const [sending, setSending] = useState(false);
+  const [sendError, setSendError] = useState('');
 
-  const resultsRef = useRef(null);
-  const crisisRef = useRef(null);
-
-  // Move focus to the new result (or to the crisis panel) so keyboard and screen
-  // reader users land on the freshly announced content.
-  useEffect(() => {
-    if (!analysis) return;
-    const target = analysis.crisis?.flag ? crisisRef.current : resultsRef.current;
-    target?.focus();
-  }, [analysis]);
-
-  async function handleSubmit(entry) {
-    setLoading(true);
-    setError('');
+  async function loadHistory() {
     try {
-      const result = await analyzeEntry(entry);
-      setAnalysis(result);
-      setEntries(saveEntry(result));
-    } catch (err) {
-      setError(err.message);
-      setAnalysis(null);
-    } finally {
-      setLoading(false);
+      const data = await getHistory();
+      setMessages(data.messages);
+    } catch {
+      setMessages([]);
     }
   }
 
-  const showCrisis = analysis?.crisis?.flag;
+  // On load, check whether we already have a session.
+  useEffect(() => {
+    let active = true;
+    me()
+      .then(async (u) => {
+        if (!active) return;
+        setUser(u);
+        if (u) await loadHistory();
+      })
+      .catch(() => {})
+      .finally(() => active && setAuthChecked(true));
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  async function handleAuthed(u) {
+    setUser(u);
+    await loadHistory();
+  }
+
+  async function handleSend(text) {
+    setSendError('');
+    setMessages((prev) => [...prev, { id: uid(), role: 'user', content: text }]);
+    setSending(true);
+    try {
+      const res = await chat(text);
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: uid(),
+          role: 'assistant',
+          content: res.reply,
+          emotion: res.emotion,
+          intensity: res.intensity,
+          triggers: res.triggers,
+          distortion: res.distortion,
+          intervention: res.intervention,
+          crisis: res.crisis,
+          helplines: res.helplines,
+        },
+      ]);
+    } catch (err) {
+      setSendError(err.message);
+    } finally {
+      setSending(false);
+    }
+  }
+
+  async function handleLogout() {
+    await logout();
+    setUser(null);
+    setMessages([]);
+  }
 
   return (
     <div className="app">
       <header className="app__header">
-        <h1 className="app__title">
-          <span aria-hidden="true">⚓ </span>Anchor
-        </h1>
+        <div className="app__brand">
+          <h1 className="app__title">
+            <span aria-hidden="true">⚓ </span>Anchor
+          </h1>
+          {user && (
+            <div className="app__account">
+              <span className="app__email">{user.email}</span>
+              <button type="button" className="linkbutton" onClick={handleLogout}>
+                Sign out
+              </button>
+            </div>
+          )}
+        </div>
         <p className="app__tagline">
-          A wellness companion that reads between the lines of your journal — finding the hidden
-          trigger, naming the thought pattern, and matching the one exercise that fits.
+          A wellness companion you can talk to — it listens between the lines for the hidden
+          trigger and the thought pattern, and offers the one exercise that fits.
         </p>
       </header>
 
       <main className="app__main">
-        <section className="card" aria-labelledby="journal-title">
-          <h2 id="journal-title" className="card__title">
-            Today&rsquo;s check-in
-          </h2>
-          <JournalForm onSubmit={handleSubmit} loading={loading} error={error} />
-        </section>
+        {!authChecked ? (
+          <p className="status" role="status">
+            Loading…
+          </p>
+        ) : !user ? (
+          <AuthForm onAuthed={handleAuthed} />
+        ) : (
+          <>
+            <section className="card chat" aria-labelledby="chat-title">
+              <h2 id="chat-title" className="card__title">
+                Talk it through
+              </h2>
+              <ChatThread messages={messages} loading={sending} />
+              <ChatInput onSend={handleSend} loading={sending} />
+              {sendError && (
+                <p className="alert" role="alert">
+                  <span aria-hidden="true">⚠ </span>
+                  {sendError}
+                </p>
+              )}
+            </section>
 
-        {showCrisis && (
-          <div ref={crisisRef} tabIndex={-1}>
-            <CrisisPanel helplines={analysis.helplines} />
-          </div>
+            <section className="card" aria-labelledby="timeline-title">
+              <h2 id="timeline-title" className="card__title">
+                Your patterns over time
+              </h2>
+              <Timeline entries={deriveEntries(messages)} />
+            </section>
+          </>
         )}
-
-        {analysis && (
-          <section
-            className="card"
-            aria-labelledby="results-title"
-            ref={resultsRef}
-            tabIndex={-1}
-          >
-            <h2 id="results-title" className="card__title">
-              What Anchor noticed
-            </h2>
-            <Analysis analysis={analysis} />
-          </section>
-        )}
-
-        <section className="card" aria-labelledby="timeline-title">
-          <h2 id="timeline-title" className="card__title">
-            Your patterns over time
-          </h2>
-          <Timeline entries={entries} />
-        </section>
       </main>
 
       <footer className="app__footer">
         <p>
-          Anchor is a supportive AI companion, not a medical service or a substitute for a therapist.
-          If you are struggling, please reach out to a trusted person or a helpline.
+          Anchor is a supportive AI companion, not a medical service or a substitute for a
+          therapist. If you are struggling, please reach out to a trusted person or a helpline.
         </p>
       </footer>
     </div>

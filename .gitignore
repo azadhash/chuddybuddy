@@ -7,6 +7,7 @@ dist/
 **/dist/
 *.log
 .DS_Store
+.pgdata/
 # --- end snippet ---
 
 # --- Local-only PromptWars playbook (keep private; not committed) ---

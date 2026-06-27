@@ -1,18 +1,16 @@
-// Test helpers — build a fake Anthropic client so tests never hit a real key or
-// the network. The fake mirrors the slice of the SDK the pipeline uses:
-// `messages.create(...)` returning a response whose first text block is JSON.
+// Test helpers — a fake Anthropic client (so tests need no key/network) returning
+// a chat-shaped structured JSON, and a default chat analysis fixture.
 
-export function mockAnthropic(modelAnalysis) {
+export function mockAnthropic(modelTurn) {
   return {
     messages: {
       create: async () => ({
-        content: [{ type: 'text', text: JSON.stringify(modelAnalysis) }],
+        content: [{ type: 'text', text: JSON.stringify(modelTurn) }],
       }),
     },
   };
 }
 
-// An Anthropic client whose create() rejects, to exercise the error path.
 export function failingAnthropic(error = new Error('upstream failure')) {
   return {
     messages: {
@@ -23,15 +21,14 @@ export function failingAnthropic(error = new Error('upstream failure')) {
   };
 }
 
-// A reasonable default model analysis object for happy-path tests.
-export function sampleAnalysis(overrides = {}) {
+export function sampleChat(overrides = {}) {
   return {
-    reflection: 'It sounds like the comparison with your peers is weighing on you.',
-    primary_emotion: 'anxious',
-    intensity: 72,
+    reply: 'That comparison with your peers sounds exhausting. What happened today?',
+    emotion: 'anxious',
+    intensity: 68,
     triggers: [{ label: 'mock rank comparison', category: 'peer_comparison' }],
-    distortion: { type: 'all_or_nothing', quote: "I'll never crack JEE" },
-    recommended_intervention: 'thought_record',
+    distortion: { type: 'all_or_nothing', quote: "I'll never catch up" },
+    suggested_intervention: 'thought_record',
     crisis: { flag: false, severity: 'none' },
     ...overrides,
   };

@@ -1,64 +1,99 @@
 # ⚓ Anchor — exam wellness companion
 
 A GenAI mental-wellness tool for students preparing for high-stakes exams
-(NEET, JEE, CUET, CAT, GATE, UPSC, board exams). Instead of a mood slider and a
-generic chatbot, **Anchor reads between the lines of a free-text journal** — it
-surfaces the hidden stress trigger, names the thought distortion, prescribes the
-one evidence-based exercise that fits, and keeps a conservative crisis safety net.
+(NEET, JEE, CUET, CAT, GATE, UPSC, board exams). Anchor is a **conversation** you
+can have any time — and as you talk, it **reads between the lines**: it surfaces the
+hidden stress trigger, names the thought distortion, prescribes the one evidence-based
+exercise that fits, and keeps a conservative crisis safety net. Your account remembers
+the conversation so it can show your patterns over time.
 
 > This is exactly the problem statement's ask: *"uncover hidden stress triggers and
 > emotional patterns that standard trackers miss"* and *"safely act as an empathetic
 > companion."*
 
-## What makes it different
+## Features
 
-- **Reads between the lines.** Each entry is analysed for the specific trigger
-  (peer/rank comparison, family pressure, time pressure…), the cognitive distortion
-  (catastrophizing, all-or-nothing…), and validated linguistic distress markers
-  (absolutist-word density, first-person-singular ratio) that a scalar mood tracker
-  cannot see.
-- **Evidence-matched coaching, with receipts.** The detected state is routed to a
-  single research-backed exercise, each shown with *why it works* and a citation —
-  CBT thought record (Ergene 2003), physiological sigh (Balban/Huberman 2023),
-  self-compassion break (Neff), if-then plan (Gollwitzer), pre-exam worry dump
-  (Ramirez & Beilock). The exercise content is fixed, reviewed text — never generated
-  per request — so the science stays accurate.
-- **Pattern engine.** A timeline over your real entries surfaces recurring triggers and
-  intensity trends, and calls out a genuine repeating pattern ("peer comparison came up
-  in 3 of your last 5 entries").
-- **Crisis safety net.** A conservative, recall-favouring scan runs *before* the model
-  call. If language suggests self-harm, the app immediately shows India helplines
-  (Tele-MANAS 14416, KIRAN, Vandrevala, AASRA, iCall) in an assertive alert region and
-  is transparent that it is an AI, not a therapist.
+- **Chat companion.** A back-and-forth conversation, not a one-shot form. Each turn the
+  AI replies warmly **and** quietly analyses your message.
+- **Reads between the lines.** Per turn it detects the specific trigger (peer/rank
+  comparison, family pressure, time pressure…), the cognitive distortion (catastrophizing,
+  all-or-nothing…), and the emotional intensity.
+- **Evidence-matched coaching, with receipts.** When the moment fits, it offers one
+  research-backed exercise inline, each with *why it works* and a citation — CBT thought
+  record (Ergene 2003), physiological sigh (Balban/Huberman 2023), self-compassion break
+  (Neff), if-then plan (Gollwitzer), pre-exam worry dump (Ramirez & Beilock). The exercise
+  content is fixed, reviewed text — never generated per request.
+- **Pattern timeline.** Recurring triggers and the intensity trend across your real
+  conversation, with a callout when a genuine pattern repeats.
+- **Crisis safety net.** A conservative scan runs *before* the model on every message. If
+  language suggests self-harm, Anchor shows India helplines (Tele-MANAS 14416, KIRAN,
+  Vandrevala, AASRA, iCall) in an assertive alert and is transparent that it is an AI, not
+  a therapist.
+- **Accounts.** Email/password sign-in; each person's chat and patterns persist in Postgres.
 
 ## Architecture
 
 ```
-web/  React + Vite SPA  ──POST /api/analyze──▶  server/  Express + Anthropic SDK
-                                                  1. validate + bound input
-                                                  2. deterministic markers (no API)
-                                                  3. ONE claude-haiku-4-5 call
-                                                     (structured JSON output)
-                                                  4. merge + attach exercise/helplines
+React/Vite SPA  ──cookie-authed fetch──▶  Express (one service)
+  AuthForm (login/register)                 /api/auth/register|login|logout|me
+  Chat thread + inline exercise/crisis      /api/chat            (auth required)
+  Timeline (from real history)              /api/chat/history    (auth required)
+                                            /api/helplines, /api/health
+                                            │
+                                       PostgreSQL  (users, messages+insight jsonb)
+                                            │
+                                   ONE claude-haiku-4-5 call per turn
+                                   (structured output: reply + analysis)
 ```
 
-- **One model call per request**, structured output (no retry-on-parse loops),
-  `claude-haiku-4-5` for a fast, cheap demo.
-- The **API key lives server-side only**; the browser talks only to our backend.
-- Linguistic markers are computed locally (no API) — both an efficiency win and what
-  makes the analysis defensible.
+- **One model call per turn**, structured output (no retry-on-parse loops); `claude-haiku-4-5`.
+- The server owns each user's history in Postgres, so the client just sends the new message.
+- Validated linguistic distress markers + the crisis keyword scan run **locally** (no API).
+- The **API key lives server-side only**; the browser only talks to our backend.
+
+## Security
+
+- Passwords hashed with `node:crypto` **scrypt** + per-user salt (constant-time verify); no
+  plaintext, no native bcrypt dependency.
+- Sessions are **httpOnly, SameSite=Lax, Secure-in-prod** signed cookies (HMAC, `SESSION_SECRET`)
+  — not readable by JavaScript, so XSS can't steal them.
+- Generic auth errors (no user enumeration); duplicate email → 409.
+- Parameterized SQL only; input validated and length-bounded; 16 kB body cap.
+- In-memory rate limiters on auth (brute force) and chat (token spend).
+- JSON errors that never leak stack traces; SSL to the database in production.
+- Secrets in a gitignored `.env`; `.env.example` documents every variable.
+
+## Accessibility
+
+Real `<label>`s on every field; one `<h1>` with real `<h2>` sections; the conversation is a
+`role="log"` `aria-live="polite"` region; `role="status"` loading and `role="alert"`
+errors/crisis; visible `:focus-visible` outlines; meaning never by colour alone (text +
+glyph); decorative icons `aria-hidden`; `prefers-reduced-motion` respected; `lang="en"`.
 
 ## Setup
 
-Requires Node ≥ 20.
+Requires Node ≥ 20 and a PostgreSQL database.
 
 ```bash
 npm install
-cp .env.example .env        # then add your key
-# edit .env: ANTHROPIC_API_KEY=sk-ant-...
+cp .env.example .env     # then fill in the values
 ```
 
-The real `.env` is gitignored; `.env.example` documents every required variable.
+`.env` (the real one is gitignored):
+
+```
+ANTHROPIC_API_KEY=sk-ant-...                 # server-side only
+SESSION_SECRET=<long random string>          # e.g. `openssl rand -hex 32`
+DATABASE_URL=postgres://anchor:anchor@localhost:5432/anchor
+```
+
+Need a local database? A one-liner is provided:
+
+```bash
+docker compose up -d     # starts Postgres matching the DATABASE_URL above
+```
+
+The schema is created automatically on first server start (idempotent).
 
 ## Run
 
@@ -66,56 +101,43 @@ The real `.env` is gitignored; `.env.example` documents every required variable.
 npm run dev      # API (http://localhost:3001) + Vite dev server (http://localhost:5173)
 ```
 
-Open http://localhost:5173. The dev server proxies `/api` to the backend.
-
-Paste an entry like *"Another mock came back and my rank dropped again, I'll never
-crack JEE, everyone is ahead of me."* — Anchor returns the trigger, the all-or-nothing
-pattern, a matched thought-record exercise with its citation, and updates your timeline.
+Open http://localhost:5173, create an account, and start chatting. Try
+*"Another mock came back and my rank dropped again, I'll never crack JEE."* — Anchor replies,
+names the all-or-nothing pattern, offers a thought-record exercise with its citation, and the
+timeline updates. Reload — your conversation is still there.
 
 ## Test
 
 ```bash
-npm test         # runs both suites (45 tests)
+npm test         # runs both suites (62 tests)
 ```
 
-- **Server** (Vitest + supertest): markers, the analysis pipeline (with a **mocked**
-  Anthropic client — no real key or network), the rate limiter, and the API routes
-  (validation 400, happy path, crisis path, generic-500-without-leak, rate limit 429).
-- **Web** (Vitest + Testing Library): form label association, `role="alert"` errors,
-  `role="status"` loading, single `<h1>`, the crisis panel accessible name + helpline,
-  the empty-state timeline, and the recurrence pattern engine.
+- **Server** (Vitest + supertest): password hashing, session tokens, the store, the chat
+  pipeline, and the auth + chat routes — all with an injected **MemoryStore + mocked Anthropic
+  client**, so tests need no key, network, or database.
+- **Web** (Vitest + Testing Library): auth-form labels/errors, the chat input, the gated app
+  (unauthed → auth, authed → chat, send → reply + exercise, crisis alert + helpline, logout),
+  the crisis panel, and the timeline pattern engine.
 
-## Build & deploy
+## Build & deploy (Render)
 
-```bash
-npm run build    # builds web/dist
-npm start        # serves API + built frontend from one service, on $PORT (default 3001)
-```
+The repo includes a **`render.yaml` Blueprint** that provisions one Node web service + a free
+managed Postgres database.
 
-`npm start` serves the compiled SPA and the API from a single long-running Express
-service — no serverless function timeouts. Set `PORT` and `ANTHROPIC_API_KEY` in the host
-environment.
+1. Push the repo to GitHub.
+2. In Render: **New → Blueprint**, select the repo. It reads `render.yaml`, creates the web
+   service and `anchor-db`, generates `SESSION_SECRET`, and wires `DATABASE_URL`.
+3. In the service's **Environment** tab, set `ANTHROPIC_API_KEY` (intentionally not committed).
+4. Deploy. The build runs `npm install --include=dev && npm run build`; start runs `npm start`,
+   which creates the schema and serves the API + built SPA from one service on `$PORT`.
 
-## Accessibility
-
-Real `<label>`s, one `<h1>` with real `<h2>` sections, results in labelled landmarks with
-focus moved to new results (or to the crisis alert), `role="status"` loading and
-`role="alert"` errors/crisis, visible `:focus-visible` outlines, meaning never carried by
-colour alone (text + glyph), decorative icons `aria-hidden`, `prefers-reduced-motion`
-respected, and `lang="en"` on the document.
-
-## Security
-
-API key server-side only; secrets in a gitignored `.env`; input type-checked and length-
-bounded (≤ 4000 chars) with a 16 kB body cap; a small in-memory rate limiter on the
-token-spending endpoint; JSON errors that never leak stack traces or internals.
+Locally the same production path works: `npm run build` then `npm start`.
 
 ## Roadmap (next feature)
 
-**Voice** via the browser Web Speech API — speech-to-text for journaling (students under
-stress often talk more freely than they type) and text-to-speech for the guided breathing
-and mindfulness exercises. The seam (`web/src/lib/voice.js`) is already in place; it needs
-no extra provider or API key, keeping the Anthropic-only and key-safety rules intact.
+**Voice** via the browser Web Speech API — speech-to-text for talking to Anchor, text-to-speech
+for the guided exercises. The seam (`web/src/lib/voice.js`) is already in place; no extra
+provider or key needed.
 
 ## Disclaimer
 

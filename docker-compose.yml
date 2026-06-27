@@ -1,0 +1,15 @@
+# Optional: a local Postgres for development, matching the DATABASE_URL in .env.example.
+# Run `docker compose up -d`, then `npm run dev`. Not used in production (Render provides its
+# own managed Postgres via render.yaml).
+
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: anchor
+      POSTGRES_PASSWORD: anchor
+      POSTGRES_DB: anchor
+    ports:
+      - '5432:5432'
+    volumes:
+      - ./.pgdata:/var/lib/postgresql/data

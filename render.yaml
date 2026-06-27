@@ -1,0 +1,34 @@
+# Render Blueprint — deploys Anchor as one Node web service + a managed Postgres
+# database. Create from the Render dashboard: New > Blueprint > pick this repo.
+#
+# After the first deploy, set ANTHROPIC_API_KEY in the service's Environment tab
+# (it is intentionally not stored in the repo). SESSION_SECRET and DATABASE_URL
+# are provisioned automatically.
+
+services:
+  - type: web
+    name: anchor
+    runtime: node
+    plan: free
+    region: oregon
+    # --include=dev is required: NODE_ENV=production makes npm skip devDependencies,
+    # but Vite (the frontend build) lives in devDependencies.
+    buildCommand: npm install --include=dev && npm run build
+    startCommand: npm start
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: ANTHROPIC_API_KEY
+        sync: false # set this in the Render dashboard; never committed
+      - key: SESSION_SECRET
+        generateValue: true # Render generates a strong random secret
+      - key: DATABASE_URL
+        fromDatabase:
+          name: anchor-db
+          property: connectionString
+
+databases:
+  - name: anchor-db
+    plan: free
+    databaseName: anchor

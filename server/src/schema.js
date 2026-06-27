@@ -1,16 +1,21 @@
-// Structured-output JSON schema for the entry analysis, plus input bounds.
+// Structured-output JSON schema for one chat turn, plus input bounds.
 //
-// The schema follows the structured-output rules: additionalProperties: false,
-// every property required, $defs/$ref for reused shapes, and no unsupported
-// constraints (no min/max on numbers, no min/max length on strings/arrays).
-// We validate ranges (e.g. intensity 0–100) defensively on our side instead.
+// The model returns a conversational `reply` AND the per-turn analysis in a
+// single structured response. The schema follows the structured-output rules:
+// additionalProperties: false, every property required, $defs for the reused
+// trigger shape, and no unsupported constraints (no min/max). Ranges are
+// validated defensively on our side.
 
 import { INTERVENTION_IDS } from './interventions.js';
 
-// Maximum accepted journal entry length (characters). Bounds request size and
-// token spend; entries longer than this are rejected with a 400.
+// Per-message bound (characters); also the request-history cap.
 export const INPUT_MAX_CHARS = 4000;
 export const INPUT_MIN_CHARS = 1;
+// How many prior messages to load as model context (keeps token spend bounded).
+export const HISTORY_LIMIT = 30;
+
+// The model may pick an intervention id, or 'none' when no exercise fits this turn.
+export const CHAT_INTERVENTION_IDS = [...INTERVENTION_IDS, 'none'];
 
 export const TRIGGER_CATEGORIES = [
   'peer_comparison',
@@ -35,7 +40,7 @@ export const DISTORTION_TYPES = [
 
 export const CRISIS_SEVERITIES = ['none', 'low', 'high'];
 
-export const ANALYSIS_SCHEMA = {
+export const CHAT_SCHEMA = {
   type: 'object',
   additionalProperties: false,
   $defs: {
@@ -53,14 +58,14 @@ export const ANALYSIS_SCHEMA = {
     },
   },
   properties: {
-    reflection: {
+    reply: {
       type: 'string',
       description:
-        'One or two warm, specific sentences reflecting back what the student is feeling. No platitudes, no advice here, no clinical language.',
+        'Your warm, conversational reply to the student, usually 1–4 sentences. Ask a gentle follow-up question when it feels natural. No clinical jargon, no platitudes, no bullet lists unless genuinely helpful.',
     },
-    primary_emotion: {
+    emotion: {
       type: 'string',
-      description: 'A single dominant emotion word, e.g. "overwhelmed", "anxious", "discouraged".',
+      description: 'The single dominant emotion you sense in their latest message, or "neutral".',
     },
     intensity: {
       type: 'integer',
@@ -68,7 +73,7 @@ export const ANALYSIS_SCHEMA = {
     },
     triggers: {
       type: 'array',
-      description: 'Specific stress triggers detected in the text. Empty if none are clear.',
+      description: 'Specific stress triggers present in the latest message. Empty if none are clear.',
       items: { $ref: '#/$defs/trigger' },
     },
     distortion: {
@@ -78,15 +83,16 @@ export const ANALYSIS_SCHEMA = {
         type: { type: 'string', enum: DISTORTION_TYPES },
         quote: {
           type: 'string',
-          description: 'The exact phrase from the entry that shows the distortion, or "" if type is none.',
+          description: 'The exact phrase showing the distortion, or "" when type is none.',
         },
       },
       required: ['type', 'quote'],
     },
-    recommended_intervention: {
+    suggested_intervention: {
       type: 'string',
-      enum: INTERVENTION_IDS,
-      description: 'The single best-matched evidence-based exercise id for this entry.',
+      enum: CHAT_INTERVENTION_IDS,
+      description:
+        'An evidence-based exercise id to offer this turn, or "none" when no exercise fits. Suggest one only when the moment genuinely calls for it — not every turn.',
     },
     crisis: {
       type: 'object',
@@ -98,13 +104,5 @@ export const ANALYSIS_SCHEMA = {
       required: ['flag', 'severity'],
     },
   },
-  required: [
-    'reflection',
-    'primary_emotion',
-    'intensity',
-    'triggers',
-    'distortion',
-    'recommended_intervention',
-    'crisis',
-  ],
+  required: ['reply', 'emotion', 'intensity', 'triggers', 'distortion', 'suggested_intervention', 'crisis'],
 };
