@@ -273,6 +273,140 @@ textarea::placeholder {
   font-style: italic;
 }
 
+.exercise__actions {
+  margin-top: 1.1rem;
+}
+
+/* Guided exercise player */
+.player {
+  margin-top: 1.1rem;
+  padding: 1.25rem;
+  background: #0b1f1c;
+  border: 1px solid #1f4a44;
+  border-radius: 12px;
+  outline: none;
+}
+
+.player__controls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  margin-top: 1.1rem;
+}
+
+/* Breathing orb */
+.breath {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.breath__stage {
+  width: 200px;
+  height: 200px;
+  display: grid;
+  place-items: center;
+}
+
+.breath__orb {
+  width: 180px;
+  height: 180px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: radial-gradient(circle at 50% 38%, #9af5ea 0%, var(--accent) 55%, #2f8f86 100%);
+  box-shadow: 0 0 60px rgba(79, 209, 197, 0.45);
+  transform: scale(0.45);
+  transition-property: transform;
+  transition-timing-function: ease-in-out;
+  will-change: transform;
+}
+
+.breath__count {
+  font-size: 1.7rem;
+  font-weight: 800;
+  color: var(--accent-ink);
+}
+
+.breath__phase {
+  margin: 0.9rem 0 0.1rem;
+  font-size: 1.4rem;
+  font-weight: 700;
+  min-height: 1.5em;
+}
+
+.breath__cycle {
+  margin: 0;
+  color: var(--ink-soft);
+  font-size: 0.9rem;
+}
+
+/* Step-by-step walk-through */
+.player__progress {
+  margin: 0 0 0.4rem;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--accent);
+}
+
+.player__step {
+  margin: 0;
+  font-size: 1.35rem;
+  line-height: 1.45;
+  min-height: 2.6em;
+}
+
+.player__dots {
+  display: flex;
+  gap: 0.4rem;
+  margin-top: 1rem;
+}
+
+.dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: #234;
+  border: 1px solid var(--card-edge);
+}
+
+.dot--on {
+  background: var(--accent);
+  border-color: var(--accent);
+}
+
+/* Completion */
+.player__done {
+  text-align: center;
+}
+
+.player__check {
+  margin: 0 auto 0.4rem;
+  width: 2.6rem;
+  height: 2.6rem;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--accent);
+  color: var(--accent-ink);
+  font-weight: 800;
+  font-size: 1.3rem;
+}
+
+.player__donemsg {
+  margin: 0;
+  font-size: 1.15rem;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .breath__orb {
+    transition: none !important;
+  }
+}
+
 /* Crisis */
 .crisis {
   background: var(--crisis-bg);

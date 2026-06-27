@@ -42,6 +42,17 @@ export const INTERVENTIONS = {
     whyItWorks:
       'A controlled trial found cyclic sighing produced the largest same-day mood improvement and the biggest drop in breathing rate among brief breathwork practices.',
     citation: 'Balban, Spiegel, Huberman et al. (2023). Cell Reports Medicine, 4(1), 100895.',
+    // Drives the animated guide. Faithful to the protocol: a full inhale, a second
+    // short sip at the top, then a longer exhale — repeated a few cycles. `scale` is
+    // the orb size at the end of each phase (resting ~0.45, full inhale 1.0).
+    breathing: {
+      cycles: 3,
+      phases: [
+        { label: 'Breathe in', seconds: 4, scale: 0.85 },
+        { label: 'A little more', seconds: 2, scale: 1 },
+        { label: 'Slow exhale', seconds: 6, scale: 0.45 },
+      ],
+    },
   },
 
   self_compassion_break: {
