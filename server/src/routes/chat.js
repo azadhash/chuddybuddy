@@ -11,7 +11,7 @@ import { ValidationError } from '../errors.js';
 // the per-turn insight; we resolve the intervention id back to the full exercise.
 function mapMessage(m) {
   if (m.role !== 'assistant') {
-    return { id: m.id, role: m.role, content: m.content };
+    return { id: m.id, role: m.role, content: m.content, createdAt: m.created_at };
   }
   const insight = m.insight ?? {};
   const crisis = insight.crisis ?? { flag: false, severity: 'none' };
@@ -19,6 +19,7 @@ function mapMessage(m) {
     id: m.id,
     role: 'assistant',
     content: m.content,
+    createdAt: m.created_at,
     emotion: insight.emotion ?? 'neutral',
     intensity: insight.intensity ?? 0,
     triggers: insight.triggers ?? [],

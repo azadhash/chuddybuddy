@@ -54,11 +54,23 @@ describe('App', () => {
     expect(await screen.findByLabelText(/email/i)).toBeInTheDocument();
   });
 
-  it('shows the chat + empty timeline when signed in', async () => {
+  it('shows the chat by default when signed in', async () => {
     me.mockResolvedValue({ email: 'a@b.com' });
     render(<App />);
     expect(await screen.findByRole('heading', { name: /talk it through/i })).toBeInTheDocument();
-    expect(screen.getByText(/patterns will appear here/i)).toBeInTheDocument();
+  });
+
+  it('switches to the Insights tab and shows the dashboard + journal empty states', async () => {
+    const user = userEvent.setup();
+    me.mockResolvedValue({ email: 'a@b.com' });
+    render(<App />);
+
+    await screen.findByRole('heading', { name: /talk it through/i });
+    await user.click(screen.getByRole('button', { name: /insights/i }));
+
+    expect(await screen.findByRole('heading', { name: /your dashboard/i })).toBeInTheDocument();
+    expect(screen.getByText(/dashboard will fill in/i)).toBeInTheDocument();
+    expect(screen.getByText(/journal is empty/i)).toBeInTheDocument();
   });
 
   it('sends a message and renders the reply + matched exercise', async () => {

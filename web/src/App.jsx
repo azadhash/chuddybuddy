@@ -3,6 +3,8 @@ import AuthForm from './components/AuthForm.jsx';
 import ChatThread from './components/ChatThread.jsx';
 import ChatInput from './components/ChatInput.jsx';
 import Timeline from './components/Timeline.jsx';
+import Dashboard from './components/Dashboard.jsx';
+import Journal from './components/Journal.jsx';
 import { me, logout, getHistory, chat } from './lib/api.js';
 import { deriveEntries } from './lib/timeline.js';
 
@@ -18,6 +20,7 @@ export default function App() {
   const [messages, setMessages] = useState([]);
   const [sending, setSending] = useState(false);
   const [sendError, setSendError] = useState('');
+  const [view, setView] = useState('chat');
 
   async function loadHistory() {
     try {
@@ -77,10 +80,18 @@ export default function App() {
     }
   }
 
+  // Opening Insights refreshes from the database so the dashboard reflects the
+  // user's persisted entries (with timestamps), not just this session's optimistic turns.
+  async function changeView(next) {
+    if (next === 'insights') await loadHistory();
+    setView(next);
+  }
+
   async function handleLogout() {
     await logout();
     setUser(null);
     setMessages([]);
+    setView('chat');
   }
 
   return (
@@ -114,26 +125,63 @@ export default function App() {
           <AuthForm onAuthed={handleAuthed} />
         ) : (
           <>
-            <section className="card chat" aria-labelledby="chat-title">
-              <h2 id="chat-title" className="card__title">
-                Talk it through
-              </h2>
-              <ChatThread messages={messages} loading={sending} />
-              <ChatInput onSend={handleSend} loading={sending} />
-              {sendError && (
-                <p className="alert" role="alert">
-                  <span aria-hidden="true">⚠ </span>
-                  {sendError}
-                </p>
-              )}
-            </section>
+            <nav className="tabs" aria-label="Sections">
+              <button
+                type="button"
+                className="tab"
+                aria-current={view === 'chat' ? 'page' : undefined}
+                onClick={() => changeView('chat')}
+              >
+                Talk
+              </button>
+              <button
+                type="button"
+                className="tab"
+                aria-current={view === 'insights' ? 'page' : undefined}
+                onClick={() => changeView('insights')}
+              >
+                Insights
+              </button>
+            </nav>
 
-            <section className="card" aria-labelledby="timeline-title">
-              <h2 id="timeline-title" className="card__title">
-                Your patterns over time
-              </h2>
-              <Timeline entries={deriveEntries(messages)} />
-            </section>
+            {view === 'chat' ? (
+              <section className="card chat" aria-labelledby="chat-title">
+                <h2 id="chat-title" className="card__title">
+                  Talk it through
+                </h2>
+                <ChatThread messages={messages} loading={sending} />
+                <ChatInput onSend={handleSend} loading={sending} />
+                {sendError && (
+                  <p className="alert" role="alert">
+                    <span aria-hidden="true">⚠ </span>
+                    {sendError}
+                  </p>
+                )}
+              </section>
+            ) : (
+              <>
+                <section className="card" aria-labelledby="dashboard-title">
+                  <h2 id="dashboard-title" className="card__title">
+                    Your dashboard
+                  </h2>
+                  <Dashboard messages={messages} />
+                </section>
+
+                <section className="card" aria-labelledby="timeline-title">
+                  <h2 id="timeline-title" className="card__title">
+                    Your patterns over time
+                  </h2>
+                  <Timeline entries={deriveEntries(messages)} />
+                </section>
+
+                <section className="card" aria-labelledby="journal-title">
+                  <h2 id="journal-title" className="card__title">
+                    Your journal
+                  </h2>
+                  <Journal messages={messages} />
+                </section>
+              </>
+            )}
           </>
         )}
       </main>
