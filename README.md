@@ -133,6 +133,26 @@ managed Postgres database.
 
 Locally the same production path works: `npm run build` then `npm start`.
 
+## Build & deploy (Railway)
+
+The repo includes a **`railway.json`** so Railway builds and runs the app the same way.
+
+1. Push the repo to GitHub.
+2. In Railway: **New Project → Deploy from GitHub repo**, select the repo. It reads
+   `railway.json` (build: `npm install --include=dev && npm run build`; start: `npm start`;
+   health check: `/api/health`).
+3. Add a database: **New → Database → Add PostgreSQL**. Railway exposes its connection string
+   as `DATABASE_URL` — reference it on the app service via a variable
+   `DATABASE_URL=${{Postgres.DATABASE_URL}}`.
+4. Set the remaining service variables:
+   - `ANTHROPIC_API_KEY` — your key (never committed).
+   - `SESSION_SECRET` — a long random string (`openssl rand -hex 32`).
+   - `NODE_ENV=production`.
+   - `DATABASE_SSL=false` **if** you point `DATABASE_URL` at Railway's private host
+     (`*.railway.internal`), which doesn't use SSL. Leave unset if using the public proxy URL.
+5. Deploy. Railway injects `PORT`; `npm start` creates the schema and serves the API + built
+   SPA from one service.
+
 ## Roadmap (next feature)
 
 **Voice** via the browser Web Speech API — speech-to-text for talking to Anchor, text-to-speech
