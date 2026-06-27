@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect } from 'vitest';
 import request from 'supertest';
 import { createApp } from '../src/app.js';
 import { createRateLimiter } from '../src/rateLimit.js';
@@ -42,15 +42,26 @@ describe('auth', () => {
 
   it('validates email and password', async () => {
     const app = makeApp();
-    expect((await request(app).post('/api/auth/register').send({ email: 'bad', password: 'supersecret' })).status).toBe(400);
-    expect((await request(app).post('/api/auth/register').send({ email: 'a@b.com', password: 'short' })).status).toBe(400);
+    expect(
+      (
+        await request(app)
+          .post('/api/auth/register')
+          .send({ email: 'bad', password: 'supersecret' })
+      ).status,
+    ).toBe(400);
+    expect(
+      (await request(app).post('/api/auth/register').send({ email: 'a@b.com', password: 'short' }))
+        .status,
+    ).toBe(400);
   });
 
   it('logs in with correct credentials and rejects wrong ones generically', async () => {
     const app = makeApp();
     await request(app).post('/api/auth/register').send(creds);
 
-    const wrong = await request(app).post('/api/auth/login').send({ ...creds, password: 'wrongpassword' });
+    const wrong = await request(app)
+      .post('/api/auth/login')
+      .send({ ...creds, password: 'wrongpassword' });
     expect(wrong.status).toBe(401);
     expect(wrong.body.error).toBe('Invalid email or password.');
 
@@ -85,7 +96,9 @@ describe('chat', () => {
     const agent = request.agent(app);
     await agent.post('/api/auth/register').send(creds);
 
-    const turn = await agent.post('/api/chat').send({ message: 'My rank dropped again and I feel hopeless.' });
+    const turn = await agent
+      .post('/api/chat')
+      .send({ message: 'My rank dropped again and I feel hopeless.' });
     expect(turn.status).toBe(200);
     expect(turn.body.reply).toBeTruthy();
     expect(turn.body.intervention.id).toBe('thought_record');
@@ -102,13 +115,18 @@ describe('chat', () => {
     const agent = request.agent(app);
     await agent.post('/api/auth/register').send(creds);
 
-    const turn = await agent.post('/api/chat').send({ message: 'I cannot do this anymore, I want to die.' });
+    const turn = await agent
+      .post('/api/chat')
+      .send({ message: 'I cannot do this anymore, I want to die.' });
     expect(turn.body.crisis.flag).toBe(true);
     expect(turn.body.helplines.length).toBeGreaterThan(0);
   });
 
   it('returns a generic 500 without leaking internals', async () => {
-    const app = createApp({ anthropic: failingAnthropic(new Error('secret upstream detail')), store: new MemoryStore() });
+    const app = createApp({
+      anthropic: failingAnthropic(new Error('secret upstream detail')),
+      store: new MemoryStore(),
+    });
     const agent = request.agent(app);
     await agent.post('/api/auth/register').send(creds);
 
@@ -122,7 +140,9 @@ describe('chat', () => {
     const agent = request.agent(app);
     await agent.post('/api/auth/register').send(creds);
 
-    const first = await agent.post('/api/chat').send({ message: 'feeling overwhelmed about the mock' });
+    const first = await agent
+      .post('/api/chat')
+      .send({ message: 'feeling overwhelmed about the mock' });
     expect(first.status).toBe(200);
     const second = await agent.post('/api/chat').send({ message: 'still overwhelmed' });
     expect(second.status).toBe(429);

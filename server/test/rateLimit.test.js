@@ -26,7 +26,9 @@ describe('createRateLimiter', () => {
   it('allows requests under the limit', () => {
     const limiter = createRateLimiter({ max: 2, windowMs: 1000 });
     let nextCalls = 0;
-    const next = () => { nextCalls += 1; };
+    const next = () => {
+      nextCalls += 1;
+    };
 
     for (let i = 0; i < 2; i += 1) {
       const { req, res } = fakeReqRes();

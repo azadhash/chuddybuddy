@@ -7,9 +7,9 @@ hidden stress trigger, names the thought distortion, prescribes the one evidence
 exercise that fits, and keeps a conservative crisis safety net. Your account remembers
 the conversation so it can show your patterns over time.
 
-> This is exactly the problem statement's ask: *"uncover hidden stress triggers and
-> emotional patterns that standard trackers miss"* and *"safely act as an empathetic
-> companion."*
+> This is exactly the problem statement's ask: _"uncover hidden stress triggers and
+> emotional patterns that standard trackers miss"_ and _"safely act as an empathetic
+> companion."_
 
 ## Features
 
@@ -19,7 +19,7 @@ the conversation so it can show your patterns over time.
   comparison, family pressure, time pressure…), the cognitive distortion (catastrophizing,
   all-or-nothing…), and the emotional intensity.
 - **Evidence-matched coaching, with receipts.** When the moment fits, it offers one
-  research-backed exercise inline, each with *why it works* and a citation — CBT thought
+  research-backed exercise inline, each with _why it works_ and a citation — CBT thought
   record (Ergene 2003), physiological sigh (Balban/Huberman 2023), self-compassion break
   (Neff), if-then plan (Gollwitzer), pre-exam worry dump (Ramirez & Beilock). The exercise
   content is fixed, reviewed text — never generated per request.
@@ -29,17 +29,37 @@ the conversation so it can show your patterns over time.
   through one step at a time with progress dots. The breathing timings are reviewed content,
   not model output.
 - **Insights dashboard.** A second tab summarises your real history — check-ins, days active,
-  current streak, average intensity — plus a *mood-over-time* chart (average intensity per
+  current streak, average intensity — plus a _mood-over-time_ chart (average intensity per
   day) and your most common thinking patterns.
 - **Journal.** Your own entries grouped by day, each annotated with how Anchor read it
   (emotion, intensity, triggers) so you can look back on how each day actually felt.
 - **Pattern timeline.** Recurring triggers and the intensity trend across your real
   conversation, with a callout when a genuine pattern repeats.
-- **Crisis safety net.** A conservative scan runs *before* the model on every message. If
-  language suggests self-harm, Anchor shows India helplines (Tele-MANAS 14416, KIRAN,
-  Vandrevala, AASRA, iCall) in an assertive alert and is transparent that it is an AI, not
-  a therapist.
+- **Crisis safety net — prompts to reach a real person.** A conservative keyword scan runs
+  _before_ the model on every message. When language suggests self-harm or that life is not
+  worth living, Anchor responds on two levels: its reply gently but directly urges the student
+  to reach out _right now_ — to a parent, school counsellor, doctor, or a crisis helpline — and
+  an assertive **"You deserve support right now"** panel (`role="alert"`) appears with India's
+  staffed helplines to call or text: **Tele-MANAS 14416**, **KIRAN 1800-599-0019**,
+  **Vandrevala Foundation +91 9999 666 555**, **AASRA +91-22-2754 6669**, and **iCall (TISS)
+  9152987821**. It is always transparent that it is an AI companion, not a crisis service, and
+  points to local emergency services for immediate danger. The scan is deliberately tuned to
+  over-trigger rather than miss a real signal.
 - **Accounts.** Email/password sign-in; each person's chat and patterns persist in Postgres.
+
+## Screenshots
+
+**Guided, animated exercise** — "Start guided exercise" turns the matched exercise into an
+interactive run-through. The physiological sigh plays an animated breathing orb that expands and
+contracts through each timed phase, with a live countdown, a cycle counter, and pause/stop:
+
+![Guided breathing exercise: an animated orb with a countdown, the phase "A little more", and "Cycle 1 of 3"](docs/screenshots/breathing-exercise.png)
+
+**Crisis safety net** — when a message suggests self-harm, an assertive "You deserve support
+right now" panel appears with India's staffed helplines to call or text, alongside a reply that
+urges reaching out to a real person:
+
+![Crisis panel titled "You deserve support right now" listing helplines: Tele-MANAS 14416, KIRAN, Vandrevala, AASRA, and iCall](docs/screenshots/crisis-helplines.png)
 
 ## Architecture
 
@@ -122,7 +142,7 @@ npm run dev      # API (http://localhost:3001) + Vite dev server (http://localho
 ```
 
 Open http://localhost:5173, create an account, and start chatting. Try
-*"Another mock came back and my rank dropped again, I'll never crack JEE."* — Anchor replies,
+_"Another mock came back and my rank dropped again, I'll never crack JEE."_ — Anchor replies,
 names the all-or-nothing pattern, offers a thought-record exercise with its citation, and the
 timeline updates. Reload — your conversation is still there.
 
@@ -141,6 +161,22 @@ npm test         # runs both suites (83 tests)
   walk-through + the animated breathing phases), the insights aggregation engine, the
   dashboard, the journal, the crisis panel, and the timeline.
 
+### Lint & format
+
+```bash
+npm run lint           # ESLint (incl. react-hooks rules) — zero errors
+npm run format:check   # Prettier — all files conform
+```
+
+## Performance notes
+
+- **One model call per turn** with structured output (no retry-on-parse loops), on
+  `claude-haiku-4-5`. The reply takes a few seconds — that latency is the model thinking, not a
+  bug; the UI announces a `role="status"` "Anchor is thinking…" while it streams back.
+- The dashboard, journal, and timeline are computed **client-side from history already in
+  memory** (memoised with `useMemo`), and the Insights tab only re-fetches when a new turn has
+  actually been sent — no redundant network calls or recomputation.
+
 ## Build & deploy (Render)
 
 The repo includes a **`render.yaml` Blueprint** that provisions one Node web service + a free
@@ -158,8 +194,8 @@ Locally the same production path works: `npm run build` then `npm start`.
 ## Roadmap (next feature)
 
 **Voice** via the browser Web Speech API — speech-to-text for talking to Anchor, text-to-speech
-for the guided exercises. The seam (`web/src/lib/voice.js`) is already in place; no extra
-provider or key needed.
+for the guided exercises. No extra provider or key needed; it layers onto the existing chat
+and exercise player.
 
 ## Disclaimer
 

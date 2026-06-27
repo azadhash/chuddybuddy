@@ -21,7 +21,9 @@ export function createRateLimiter({ windowMs = 60_000, max = 20, now = () => Dat
     if (bucket.count > max) {
       const retryAfter = Math.ceil((bucket.resetAt - ts) / 1000);
       res.set('Retry-After', String(retryAfter));
-      return res.status(429).json({ error: 'Too many requests. Please slow down and try again shortly.' });
+      return res
+        .status(429)
+        .json({ error: 'Too many requests. Please slow down and try again shortly.' });
     }
 
     return next();

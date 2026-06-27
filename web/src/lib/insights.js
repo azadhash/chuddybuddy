@@ -131,27 +131,13 @@ export function summary(messages = []) {
   const entries = entriesFrom(messages);
   const days = journalDays(messages); // most-recent first
   const total = entries.length;
-  const avgIntensity = total
-    ? Math.round(entries.reduce((a, e) => a + e.intensity, 0) / total)
-    : 0;
+  const avgIntensity = total ? Math.round(entries.reduce((a, e) => a + e.intensity, 0) / total) : 0;
   return {
     totalCheckins: total,
     daysActive: days.length,
     avgIntensity,
     streak: currentStreak(days.map((d) => d.key)),
   };
-}
-
-// Trigger categories by how many check-ins they appeared in (counted once each).
-export function topTriggers(messages = []) {
-  const counts = new Map();
-  for (const e of entriesFrom(messages)) {
-    const seen = new Set((e.triggers ?? []).map((t) => t.category));
-    for (const cat of seen) counts.set(cat, (counts.get(cat) ?? 0) + 1);
-  }
-  return [...counts.entries()]
-    .sort((a, b) => b[1] - a[1])
-    .map(([category, count]) => ({ category, count }));
 }
 
 export function topDistortions(messages = []) {

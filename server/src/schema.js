@@ -73,7 +73,8 @@ export const CHAT_SCHEMA = {
     },
     triggers: {
       type: 'array',
-      description: 'Specific stress triggers present in the latest message. Empty if none are clear.',
+      description:
+        'Specific stress triggers present in the latest message. Empty if none are clear.',
       items: { $ref: '#/$defs/trigger' },
     },
     distortion: {
@@ -104,5 +105,13 @@ export const CHAT_SCHEMA = {
       required: ['flag', 'severity'],
     },
   },
-  required: ['reply', 'emotion', 'intensity', 'triggers', 'distortion', 'suggested_intervention', 'crisis'],
+  required: [
+    'reply',
+    'emotion',
+    'intensity',
+    'triggers',
+    'distortion',
+    'suggested_intervention',
+    'crisis',
+  ],
 };

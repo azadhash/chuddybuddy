@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import AuthForm from './components/AuthForm.jsx';
 import ChatThread from './components/ChatThread.jsx';
 import ChatInput from './components/ChatInput.jsx';
@@ -22,6 +22,12 @@ export default function App() {
   const [sendError, setSendError] = useState('');
   const [view, setView] = useState('chat');
   const sendErrorRef = useRef(null);
+  // True when a new turn has been sent since history was last loaded, so the
+  // Insights tab knows it must refresh (to pick up timestamps + persisted insight).
+  const historyDirty = useRef(false);
+
+  // Timeline entries derive from the conversation; recompute only when it changes.
+  const timelineEntries = useMemo(() => deriveEntries(messages), [messages]);
 
   // Take focus to a send error when it appears (WCAG: errors should receive focus).
   useEffect(() => {
@@ -34,6 +40,8 @@ export default function App() {
       setMessages(data.messages);
     } catch {
       setMessages([]);
+    } finally {
+      historyDirty.current = false;
     }
   }
 
@@ -79,6 +87,7 @@ export default function App() {
           helplines: res.helplines,
         },
       ]);
+      historyDirty.current = true;
     } catch (err) {
       setSendError(err.message);
     } finally {
@@ -87,9 +96,10 @@ export default function App() {
   }
 
   // Opening Insights refreshes from the database so the dashboard reflects the
-  // user's persisted entries (with timestamps), not just this session's optimistic turns.
+  // user's persisted entries (with timestamps) — but only when a new turn has been
+  // sent since the last load, avoiding a redundant fetch on every tab switch.
   async function changeView(next) {
-    if (next === 'insights') await loadHistory();
+    if (next === 'insights' && historyDirty.current) await loadHistory();
     setView(next);
   }
 
@@ -120,8 +130,8 @@ export default function App() {
           )}
         </div>
         <p className="app__tagline">
-          A wellness companion you can talk to — it listens between the lines for the hidden
-          trigger and the thought pattern, and offers the one exercise that fits.
+          A wellness companion you can talk to — it listens between the lines for the hidden trigger
+          and the thought pattern, and offers the one exercise that fits.
         </p>
       </header>
 
@@ -180,7 +190,7 @@ export default function App() {
                   <h2 id="timeline-title" className="card__title">
                     Your patterns over time
                   </h2>
-                  <Timeline entries={deriveEntries(messages)} />
+                  <Timeline entries={timelineEntries} />
                 </section>
 
                 <section className="card" aria-labelledby="journal-title">

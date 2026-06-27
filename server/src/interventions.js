@@ -84,7 +84,8 @@ export const INTERVENTIONS = {
     ],
     whyItWorks:
       'Pre-linking a situational cue to an action closes the intention–behaviour gap. A meta-analysis of 94 studies found a medium-to-large effect on goal attainment.',
-    citation: 'Gollwitzer & Sheeran (2006). Advances in Experimental Social Psychology, 38, 69–119.',
+    citation:
+      'Gollwitzer & Sheeran (2006). Advances in Experimental Social Psychology, 38, 69–119.',
   },
 
   worry_dump: {

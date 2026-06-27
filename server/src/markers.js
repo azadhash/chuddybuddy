@@ -13,10 +13,30 @@
 //    as an aggregate signal.
 
 const ABSOLUTIST_WORDS = [
-  'absolutely', 'all', 'always', 'complete', 'completely', 'constant',
-  'constantly', 'definitely', 'entire', 'ever', 'every', 'everyone',
-  'everything', 'full', 'must', 'never', 'nothing', 'no one', 'nobody',
-  'none', 'nowhere', 'totally', 'total', 'whole',
+  'absolutely',
+  'all',
+  'always',
+  'complete',
+  'completely',
+  'constant',
+  'constantly',
+  'definitely',
+  'entire',
+  'ever',
+  'every',
+  'everyone',
+  'everything',
+  'full',
+  'must',
+  'never',
+  'nothing',
+  'no one',
+  'nobody',
+  'none',
+  'nowhere',
+  'totally',
+  'total',
+  'whole',
 ];
 
 const FIRST_PERSON_SINGULAR = ['i', 'me', 'my', 'mine', 'myself'];
@@ -51,12 +71,29 @@ export function firstPersonRatio(text) {
 // tool should over-trigger rather than miss a disclosure (WHO LMM guidance).
 // Matched as substrings on normalized text so light phrasing variation is caught.
 const CRISIS_PHRASES = [
-  'kill myself', 'killing myself', 'end my life', 'ending my life',
-  'want to die', 'wanna die', 'better off dead', 'better off without me',
-  'no reason to live', 'no point in living', "don't want to be here",
-  'do not want to be here', 'take my own life', 'suicide', 'suicidal',
-  'self harm', 'self-harm', 'hurt myself', 'harming myself',
-  'cut myself', "can't go on", 'cannot go on', 'end it all',
+  'kill myself',
+  'killing myself',
+  'end my life',
+  'ending my life',
+  'want to die',
+  'wanna die',
+  'better off dead',
+  'better off without me',
+  'no reason to live',
+  'no point in living',
+  "don't want to be here",
+  'do not want to be here',
+  'take my own life',
+  'suicide',
+  'suicidal',
+  'self harm',
+  'self-harm',
+  'hurt myself',
+  'harming myself',
+  'cut myself',
+  "can't go on",
+  'cannot go on',
+  'end it all',
 ];
 
 // Returns { flagged: boolean, matches: string[] }.

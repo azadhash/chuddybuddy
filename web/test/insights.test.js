@@ -4,7 +4,6 @@ import {
   journalDays,
   dailyMood,
   summary,
-  topTriggers,
   topDistortions,
 } from '../src/lib/insights.js';
 
@@ -22,7 +21,12 @@ function sampleMessages() {
       triggers: [{ label: 'rank', category: 'peer_comparison' }],
       distortion: { type: 'all_or_nothing', quote: 'never catch up' },
     },
-    { id: 3, role: 'user', content: 'parents will be disappointed', createdAt: '2026-06-26T10:00:00Z' },
+    {
+      id: 3,
+      role: 'user',
+      content: 'parents will be disappointed',
+      createdAt: '2026-06-26T10:00:00Z',
+    },
     {
       id: 4,
       role: 'assistant',
@@ -40,7 +44,11 @@ describe('entriesFrom', () => {
   it('pairs each user check-in with the following assistant analysis', () => {
     const entries = entriesFrom(sampleMessages());
     expect(entries).toHaveLength(2);
-    expect(entries[0]).toMatchObject({ text: 'rank dropped again', emotion: 'anxious', intensity: 60 });
+    expect(entries[0]).toMatchObject({
+      text: 'rank dropped again',
+      emotion: 'anxious',
+      intensity: 60,
+    });
   });
 
   it('skips optimistic messages that have no timestamp yet', () => {
@@ -83,8 +91,7 @@ describe('summary', () => {
 });
 
 describe('top patterns', () => {
-  it('ranks triggers and thinking patterns by frequency', () => {
-    expect(topTriggers(sampleMessages())).toHaveLength(2);
+  it('ranks thinking patterns by frequency', () => {
     const distortions = topDistortions(sampleMessages());
     expect(distortions).toHaveLength(2);
     expect(distortions.every((d) => d.count === 1)).toBe(true);
@@ -93,7 +100,13 @@ describe('top patterns', () => {
   it('ignores the "none" distortion', () => {
     const msgs = [
       { id: 1, role: 'user', content: 'hi', createdAt: '2026-06-26T10:00:00Z' },
-      { id: 2, role: 'assistant', content: 'hello', createdAt: '2026-06-26T10:00:01Z', distortion: { type: 'none', quote: '' } },
+      {
+        id: 2,
+        role: 'assistant',
+        content: 'hello',
+        createdAt: '2026-06-26T10:00:01Z',
+        distortion: { type: 'none', quote: '' },
+      },
     ];
     expect(topDistortions(msgs)).toHaveLength(0);
   });

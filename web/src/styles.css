@@ -28,7 +28,7 @@ body {
   margin: 0;
   background: radial-gradient(1200px 600px at 80% -10%, #1d2c40 0%, var(--bg) 55%);
   color: var(--ink);
-  font-family: "Iowan Old Style", "Palatino Linotype", Georgia, "Times New Roman", serif;
+  font-family: 'Iowan Old Style', 'Palatino Linotype', Georgia, 'Times New Roman', serif;
   line-height: 1.6;
 }
 
@@ -103,7 +103,9 @@ textarea::placeholder {
   border-radius: 999px;
   padding: 0.65rem 1.4rem;
   cursor: pointer;
-  transition: transform 0.08s ease, filter 0.15s ease;
+  transition:
+    transform 0.08s ease,
+    filter 0.15s ease;
 }
 
 .button:hover {

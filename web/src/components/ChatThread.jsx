@@ -13,12 +13,7 @@ export default function ChatThread({ messages, loading }) {
   }, [messages, loading]);
 
   return (
-    <div
-      className="chat__log"
-      role="log"
-      aria-live="polite"
-      aria-label="Conversation with Anchor"
-    >
+    <div className="chat__log" role="log" aria-live="polite" aria-label="Conversation with Anchor">
       {messages.length === 0 && (
         <p className="chat__empty">
           Tell Anchor how your prep is going today. Write as much or as little as you like — it

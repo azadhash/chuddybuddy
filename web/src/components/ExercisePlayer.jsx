@@ -21,40 +21,41 @@ function BreathingPlayer({ spec, onClose }) {
     return out;
   }, [spec]);
 
-  const [index, setIndex] = useState(0);
-  const [secondsLeft, setSecondsLeft] = useState(timeline[0].seconds);
+  // Position is one atomic state ({ index, secondsLeft }) so the timer can both
+  // count down and advance to the next phase in a single update.
+  const [pos, setPos] = useState({ index: 0, secondsLeft: timeline[0].seconds });
   const [running, setRunning] = useState(true);
   const regionRef = useRef(null);
 
-  const done = index >= timeline.length;
-  const phase = done ? null : timeline[index];
+  const done = pos.index >= timeline.length;
+  const phase = done ? null : timeline[pos.index];
 
   useEffect(() => {
     regionRef.current?.focus?.();
   }, []);
 
-  // One-second tick while running.
+  // One-second tick: decrement, and roll over to the next phase when it elapses.
   useEffect(() => {
     if (!running || done) return undefined;
-    const id = setInterval(() => setSecondsLeft((s) => s - 1), 1000);
+    const id = setInterval(() => {
+      setPos((prev) => {
+        if (prev.secondsLeft > 1) return { ...prev, secondsLeft: prev.secondsLeft - 1 };
+        const nextIndex = prev.index + 1;
+        return {
+          index: nextIndex,
+          secondsLeft: nextIndex < timeline.length ? timeline[nextIndex].seconds : 0,
+        };
+      });
+    }, 1000);
     return () => clearInterval(id);
-  }, [running, done]);
-
-  // Advance to the next phase when the current one elapses.
-  useEffect(() => {
-    if (done || secondsLeft > 0) return;
-    const next = index + 1;
-    setIndex(next);
-    if (next < timeline.length) setSecondsLeft(timeline[next].seconds);
-  }, [secondsLeft, done, index, timeline]);
+  }, [running, done, timeline]);
 
   if (done) {
     return (
       <CompletionPanel
         message="Well done. Notice how your body feels now compared to a minute ago."
         onRestart={() => {
-          setIndex(0);
-          setSecondsLeft(timeline[0].seconds);
+          setPos({ index: 0, secondsLeft: timeline[0].seconds });
           setRunning(true);
         }}
         onClose={onClose}
@@ -76,7 +77,7 @@ function BreathingPlayer({ spec, onClose }) {
           aria-hidden="true"
           style={{ transform: `scale(${phase.scale})`, transitionDuration: `${phase.seconds}s` }}
         >
-          <span className="breath__count">{secondsLeft}</span>
+          <span className="breath__count">{pos.secondsLeft}</span>
         </span>
       </div>
 

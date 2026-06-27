@@ -37,7 +37,11 @@ function handle(fn) {
     try {
       await fn(req, res);
     } catch (err) {
-      if (err instanceof ValidationError || err instanceof AuthError || err instanceof ConflictError) {
+      if (
+        err instanceof ValidationError ||
+        err instanceof AuthError ||
+        err instanceof ConflictError
+      ) {
         return res.status(err.statusCode).json({ error: err.message });
       }
       console.error('[auth] failed:', err);

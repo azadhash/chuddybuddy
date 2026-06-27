@@ -1,3 +1,4 @@
+import { useMemo } from 'react';
 import { journalDays, timeLabel } from '../lib/insights.js';
 import { triggerLabel, emotionLabel } from '../lib/labels.js';
 
@@ -5,7 +6,7 @@ import { triggerLabel, emotionLabel } from '../lib/labels.js';
 // (emotion + intensity + any triggers). This is the "see what I wrote and how I
 // was feeling each day" view. Real entries only — empty until the user writes.
 export default function Journal({ messages }) {
-  const days = journalDays(messages);
+  const days = useMemo(() => journalDays(messages), [messages]);
 
   if (days.length === 0) {
     return (

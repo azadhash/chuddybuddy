@@ -53,7 +53,7 @@ function mergeCrisis(markerCrisis, modelCrisis) {
     return { flag: true, severity: 'high', source: 'keyword' };
   }
   const flag = Boolean(modelCrisis?.flag);
-  const severity = flag ? modelCrisis.severity ?? 'low' : 'none';
+  const severity = flag ? (modelCrisis.severity ?? 'low') : 'none';
   return { flag, severity, source: flag ? 'model' : 'none' };
 }
 

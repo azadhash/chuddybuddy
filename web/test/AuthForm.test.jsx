@@ -3,7 +3,7 @@ import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 
 vi.mock('../src/lib/api.js', () => ({ login: vi.fn(), register: vi.fn() }));
-import { login, register } from '../src/lib/api.js';
+import { login } from '../src/lib/api.js';
 import AuthForm from '../src/components/AuthForm.jsx';
 
 beforeEach(() => vi.clearAllMocks());

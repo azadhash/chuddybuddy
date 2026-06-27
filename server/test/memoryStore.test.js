@@ -15,7 +15,12 @@ describe('MemoryStore', () => {
     const store = new MemoryStore();
     const user = await store.createUser({ email: 'a@b.com', passwordHash: 'h' });
     await store.addMessage({ userId: user.id, role: 'user', content: 'hi' });
-    await store.addMessage({ userId: user.id, role: 'assistant', content: 'hello', insight: { emotion: 'calm' } });
+    await store.addMessage({
+      userId: user.id,
+      role: 'assistant',
+      content: 'hello',
+      insight: { emotion: 'calm' },
+    });
 
     const list = await store.listMessages(user.id);
     expect(list.map((m) => m.role)).toEqual(['user', 'assistant']);

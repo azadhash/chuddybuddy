@@ -41,8 +41,8 @@ export default function AuthForm({ onAuthed }) {
         {isRegister ? 'Create your account' : 'Welcome back'}
       </h2>
       <p className="auth__intro">
-        Anchor keeps your conversations private to your account so it can notice your patterns
-        over time.
+        Anchor keeps your conversations private to your account so it can notice your patterns over
+        time.
       </p>
 
       <form className="auth__form" onSubmit={handleSubmit} noValidate>

@@ -1,3 +1,4 @@
+import { useMemo } from 'react';
 import { summary, dailyMood, topDistortions } from '../lib/insights.js';
 import { distortionLabel, emotionLabel } from '../lib/labels.js';
 
@@ -5,7 +6,15 @@ import { distortionLabel, emotionLabel } from '../lib/labels.js';
 // emotional intensity has moved day by day, and the thinking patterns that recur.
 // Shows a genuine empty state until there are check-ins — nothing is seeded.
 export default function Dashboard({ messages }) {
-  const stats = summary(messages);
+  // Derive once per messages change rather than on every render.
+  const { stats, mood, distortions } = useMemo(
+    () => ({
+      stats: summary(messages),
+      mood: dailyMood(messages),
+      distortions: topDistortions(messages),
+    }),
+    [messages],
+  );
 
   if (stats.totalCheckins === 0) {
     return (
@@ -16,8 +25,6 @@ export default function Dashboard({ messages }) {
     );
   }
 
-  const mood = dailyMood(messages);
-  const distortions = topDistortions(messages);
   const maxDistortion = distortions.length ? distortions[0].count : 0;
 
   return (
@@ -34,7 +41,10 @@ export default function Dashboard({ messages }) {
         {mood.map((day) => (
           <li key={day.key} className="mood__col">
             <span className="mood__track" aria-hidden="true">
-              <span className="mood__fill" style={{ height: `${Math.max(6, day.avgIntensity)}%` }} />
+              <span
+                className="mood__fill"
+                style={{ height: `${Math.max(6, day.avgIntensity)}%` }}
+              />
             </span>
             <span
               className="mood__day"
@@ -54,7 +64,10 @@ export default function Dashboard({ messages }) {
             <li key={type} className="bars__row">
               <span className="bars__label">{distortionLabel(type)}</span>
               <span className="bars__track" aria-hidden="true">
-                <span className="bars__fill" style={{ width: `${(count / maxDistortion) * 100}%` }} />
+                <span
+                  className="bars__fill"
+                  style={{ width: `${(count / maxDistortion) * 100}%` }}
+                />
               </span>
               <span className="bars__count">
                 {count} {count === 1 ? 'time' : 'times'}

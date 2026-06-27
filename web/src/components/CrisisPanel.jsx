@@ -10,9 +10,9 @@ export default function CrisisPanel({ helplines }) {
         <span aria-hidden="true">💛 </span>You deserve support right now
       </h2>
       <p className="crisis__message">
-        What you wrote sounds really heavy, and you do not have to carry it alone. Anchor is an
-        AI companion, not a crisis service — please reach out to a real person who can help. If you
-        are in immediate danger, contact your local emergency services.
+        What you wrote sounds really heavy, and you do not have to carry it alone. Anchor is an AI
+        companion, not a crisis service — please reach out to a real person who can help. If you are
+        in immediate danger, contact your local emergency services.
       </p>
       <ul className="crisis__lines">
         {helplines.map((line) => (

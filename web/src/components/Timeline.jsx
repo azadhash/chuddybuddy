@@ -72,7 +72,10 @@ export default function Timeline({ entries }) {
       )}
 
       <h3 className="timeline__subhead">Recent intensity</h3>
-      <ol className="trend" aria-label="Emotional intensity of your recent entries, oldest to newest">
+      <ol
+        className="trend"
+        aria-label="Emotional intensity of your recent entries, oldest to newest"
+      >
         {recent.map((entry) => (
           <li key={entry.id} className="trend__bar-wrap">
             <span
